@@ -1,73 +1,185 @@
-# Welcome to your Lovable project
+# Coinoswap Admin Dashboard - Next.js Version
 
-## Project info
+A modern, responsive admin dashboard for cryptocurrency exchange management built with Next.js and JavaScript.
 
-**URL**: https://lovable.dev/projects/b23cc274-f59a-4831-ae02-0aee7976258c
+## Tech Stack
 
-## How can I edit this code?
+- **Next.js 15** - React framework with App Router
+- **React 18** - JavaScript library for building user interfaces
+- **JavaScript** - Programming language (converted from TypeScript)
+- **Tailwind CSS** - Utility-first CSS framework
+- **shadcn/ui** - Re-usable components built with Radix UI
+- **TanStack React Query** - Data fetching and state management
+- **React Hook Form** - Form handling
+- **Zod** - Schema validation
+- **Lucide React** - Icon library
+- **Recharts** - Chart library for data visualization
+- **next-themes** - Dark mode support
 
-There are several ways of editing your application.
+## Features
 
-**Use Lovable**
+- ✅ Modern Next.js App Router architecture
+- ✅ Client-side authentication with session storage
+- ✅ Protected routes with authentication guard
+- ✅ Responsive sidebar navigation
+- ✅ Dark mode support
+- ✅ 50+ shadcn/ui components
+- ✅ Form validation with React Hook Form and Zod
+- ✅ Data visualization with Recharts
+- ✅ Mobile-friendly responsive design
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/b23cc274-f59a-4831-ae02-0aee7976258c) and start prompting.
+## Getting Started
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prerequisites
 
-**Use your preferred IDE**
+- Node.js 18+ installed
+- npm or yarn package manager
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Installation
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. Clone the repository or navigate to the project directory:
 
-Follow these steps:
+\`\`\`bash
+cd coinoswap-admin-dashboard-nextjs
+\`\`\`
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+2. Install dependencies:
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+\`\`\`bash
+npm install
+\`\`\`
 
-# Step 3: Install the necessary dependencies.
-npm i
+3. Run the development server:
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+\`\`\`bash
 npm run dev
-```
+\`\`\`
 
-**Edit a file directly in GitHub**
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Build for Production
 
-**Use GitHub Codespaces**
+\`\`\`bash
+npm run build
+npm start
+\`\`\`
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Default Login Credentials
 
-## What technologies are used for this project?
+- **Email:** admin@coinoswap.com
+- **Password:** admin123
 
-This project is built with:
+## Project Structure
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+\`\`\`
+coinoswap-admin-dashboard-nextjs/
+├── app/                      # Next.js App Router pages
+│   ├── layout.js            # Root layout with providers
+│   ├── page.js              # Home page
+│   ├── login/               # Login page
+│   ├── dashboard/           # Dashboard page
+│   ├── swap-coin/           # Swap coin page
+│   ├── buy-coin/            # Buy coin page
+│   ├── networks/            # Networks management
+│   ├── transactions/        # Transactions page
+│   ├── admin/               # Admin settings
+│   ├── setting/             # General settings
+│   ├── setting-exchange/    # Exchange settings
+│   └── profile/             # User profile
+├── components/              # Reusable components
+│   ├── ui/                  # shadcn/ui components
+│   ├── providers/           # Context providers
+│   ├── DashboardLayout.js   # Main dashboard layout
+│   ├── NavLink.js           # Navigation link component
+│   └── ProtectedRoute.js    # Route protection wrapper
+├── contexts/                # React contexts
+│   └── AuthContext.js       # Authentication context
+├── hooks/                   # Custom React hooks
+│   ├── use-mobile.js        # Mobile detection hook
+│   └── use-toast.js         # Toast notification hook
+├── lib/                     # Utility libraries
+│   └── utils.js             # Utility functions
+├── next.config.js           # Next.js configuration
+├── tailwind.config.js       # Tailwind CSS configuration
+├── postcss.config.js        # PostCSS configuration
+├── jsconfig.json            # JavaScript configuration
+└── package.json             # Dependencies and scripts
+\`\`\`
 
-## How can I deploy this project?
+## Available Routes
 
-Simply open [Lovable](https://lovable.dev/projects/b23cc274-f59a-4831-ae02-0aee7976258c) and click on Share -> Publish.
+- `/` - Landing page
+- `/login` - Login page
+- `/dashboard` - Main dashboard (protected)
+- `/swap-coin` - Coin swap management (protected)
+- `/buy-coin` - Buy cryptocurrency (protected)
+- `/networks` - Network management (protected)
+- `/transactions` - Transaction history (protected)
+- `/admin` - Admin controls (protected)
+- `/setting` - General settings (protected)
+- `/setting-exchange` - Exchange settings (protected)
+- `/profile` - User profile (protected)
 
-## Can I connect a custom domain to my Lovable project?
+## Authentication
 
-Yes, you can!
+The app uses a simple client-side authentication system with sessionStorage. In production, you should replace this with a proper backend authentication system.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### How it works:
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+1. User logs in with credentials
+2. Session data is stored in sessionStorage
+3. Protected routes check for valid session
+4. Logout clears the session and redirects to login
+
+## Customization
+
+### Colors
+
+Edit the CSS variables in `app/globals.css` to customize the color scheme:
+
+\`\`\`css
+:root {
+  --background: 0 0% 4%;
+  --foreground: 45 100% 95%;
+  --primary: 45 93% 47%;
+  /* ... more colors */
+}
+\`\`\`
+
+### Components
+
+All UI components are located in `components/ui/` and can be customized as needed. They follow the shadcn/ui pattern.
+
+### Layout
+
+Modify `components/DashboardLayout.js` to customize the sidebar navigation, header, or overall layout structure.
+
+## Migration from Vite + TypeScript
+
+This project was migrated from a Vite + React + TypeScript setup to Next.js + JavaScript:
+
+### Key Changes:
+
+1. **Router**: React Router → Next.js App Router
+2. **Language**: TypeScript → JavaScript
+3. **Build Tool**: Vite → Next.js
+4. **Navigation**: `useNavigate` → `useRouter` from next/navigation
+5. **Links**: `<Link>` from react-router-dom → `<Link>` from next/link
+6. **Client Components**: Added `"use client"` directive to interactive components
+
+## Contributing
+
+To add new pages or features:
+
+1. Create a new folder in `app/` with a `page.js` file
+2. Wrap protected pages with `<ProtectedRoute>`
+3. Use `<DashboardLayout>` for consistent layout
+4. Add navigation links in `components/DashboardLayout.js`
+
+## License
+
+This project is part of the Coinoswap platform.
+
+## Support
+
+For issues or questions, please contact the development team.
