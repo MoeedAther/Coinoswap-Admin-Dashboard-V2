@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { NavLink } from '@/components/NavLink';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect } from "react";
+import { NavLink } from "@/components/NavLink";
+import { useAuth } from "@/contexts/AuthContext";
+import { useAppSelector } from "@/redux/store/hook";
 import {
   LayoutDashboard,
   Coins,
@@ -14,25 +15,25 @@ import {
   LogOut,
   Shield,
   Settings as SettingsIcon,
-  UserCircle
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { cn } from '@/lib/utils';
+  UserCircle,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Swap Coin', href: '/swap-coin', icon: Coins },
-  { name: 'Buy Coin', href: '/buy-coin', icon: ShoppingCart },
-  { name: 'Crypto Networks', href: '/networks', icon: Network },
-  { name: 'Transactions', href: '/transactions', icon: RefreshCw },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Swap Coin", href: "/swap-coin", icon: Coins },
+  { name: "Buy Coin", href: "/buy-coin", icon: ShoppingCart },
+  { name: "Crypto Networks", href: "/networks", icon: Network },
+  { name: "Transactions", href: "/transactions", icon: RefreshCw },
 ];
 
 const accountPages = [
-  { name: 'Admin', href: '/admin', icon: Shield },
-  { name: 'Setting', href: '/setting', icon: SettingsIcon },
-  { name: 'Setting Exchange', href: '/setting-exchange', icon: SettingsIcon },
-  { name: 'Profile', href: '/profile', icon: UserCircle },
+  { name: "Admin", href: "/admin", icon: Shield },
+  { name: "Setting", href: "/setting", icon: SettingsIcon },
+  { name: "Setting Exchange", href: "/setting-exchange", icon: SettingsIcon },
+  { name: "Profile", href: "/profile", icon: UserCircle },
 ];
 
 const SidebarContent = ({ sidebarOpen, onNavClick }) => (
@@ -43,10 +44,10 @@ const SidebarContent = ({ sidebarOpen, onNavClick }) => (
           key={item.name}
           to={item.href}
           onClick={onNavClick}
-          className="flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-smooth text-sm sm:text-base"
-          activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-glow"
+          className="flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-primary transition-all duration-200 text-sm sm:text-base group"
+          activeClassName="bg-sidebar-accent text-primary font-medium"
         >
-          <item.icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+          <item.icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 transition-colors duration-200 [&_path]:transition-colors" />
           {sidebarOpen && <span className="truncate">{item.name}</span>}
         </NavLink>
       ))}
@@ -62,10 +63,10 @@ const SidebarContent = ({ sidebarOpen, onNavClick }) => (
           key={item.name}
           to={item.href}
           onClick={onNavClick}
-          className="flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-smooth text-sm sm:text-base"
-          activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-glow"
+          className="flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-primary transition-all duration-200 text-sm sm:text-base group"
+          activeClassName="bg-sidebar-accent text-primary font-medium"
         >
-          <item.icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+          <item.icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 transition-colors duration-200 [&_path]:transition-colors" />
           {sidebarOpen && <span className="truncate">{item.name}</span>}
         </NavLink>
       ))}
@@ -76,7 +77,9 @@ const SidebarContent = ({ sidebarOpen, onNavClick }) => (
 export const DashboardLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { logout, user } = useAuth();
+  const { logout } = useAuth();
+  const { admin } = useAppSelector((state) => state.auth);
+  const user = admin;
 
   useEffect(() => {
     const handleResize = () => {
@@ -84,8 +87,8 @@ export const DashboardLayout = ({ children }) => {
         setMobileMenuOpen(false);
       }
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   return (
@@ -99,9 +102,11 @@ export const DashboardLayout = ({ children }) => {
       >
         <div className="h-16 flex items-center justify-between px-6 border-b border-sidebar-border">
           {sidebarOpen && (
-            <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              CoinoSwap
-            </span>
+            <NavLink href="/dashboard">
+              <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-[#E8AF0C] cursor-pointer">
+                CoinoSwap
+              </span>
+            </NavLink>
           )}
           <Button
             variant="ghost"
@@ -109,7 +114,11 @@ export const DashboardLayout = ({ children }) => {
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="text-sidebar-foreground hover:text-black"
           >
-            {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {sidebarOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </Button>
         </div>
         <SidebarContent sidebarOpen={sidebarOpen} />
@@ -117,8 +126,14 @@ export const DashboardLayout = ({ children }) => {
 
       {/* Mobile Sidebar Sheet */}
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-        <SheetContent side="left" className="w-64 p-0 bg-sidebar border-sidebar-border">
-          <SidebarContent sidebarOpen={true} onNavClick={() => setMobileMenuOpen(false)} />
+        <SheetContent
+          side="left"
+          className="w-64 p-0 bg-[#0F0F0F] border-sidebar-border"
+        >
+          <SidebarContent
+            sidebarOpen={true}
+            onNavClick={() => setMobileMenuOpen(false)}
+          />
         </SheetContent>
       </Sheet>
 
@@ -153,7 +168,7 @@ export const DashboardLayout = ({ children }) => {
               <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-sidebar-accent">
                 <UserCircle className="h-4 w-4 text-sidebar-accent-foreground" />
                 <span className="text-sm font-medium text-sidebar-accent-foreground">
-                  {user?.email || 'Admin'}
+                  {user?.email || "Admin"}
                 </span>
               </div>
               <Button
@@ -170,9 +185,7 @@ export const DashboardLayout = ({ children }) => {
         </header>
 
         {/* Page Content */}
-        <main className="p-4 sm:p-6">
-          {children}
-        </main>
+        <main className="p-4 sm:p-6">{children}</main>
       </div>
     </div>
   );

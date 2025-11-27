@@ -7,13 +7,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Lock, Mail } from 'lucide-react';
+import { Lock, Mail, Shield } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState({ email: '', password: '' });
-  const { login, isAuthenticated } = useAuth();
+  const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [errors, setErrors] = useState({ email: '', password: '', twoFactorCode: '' });
+  const [isLoading, setIsLoading] = useState(false);
+  const [show2FA, setShow2FA] = useState(false);
+  const { login, isAuthenticated, requires2FA } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -22,8 +26,14 @@ export default function Login() {
     }
   }, [isAuthenticated, router]);
 
+  useEffect(() => {
+    if (requires2FA) {
+      setShow2FA(true);
+    }
+  }, [requires2FA]);
+
   const validateForm = () => {
-    const newErrors = { email: '', password: '' };
+    const newErrors = { email: '', password: '', twoFactorCode: '' };
     let isValid = true;
 
     if (!email) {
@@ -42,14 +52,29 @@ export default function Login() {
       isValid = false;
     }
 
+    if (show2FA && !twoFactorCode) {
+      newErrors.twoFactorCode = '2FA code is required';
+      isValid = false;
+    } else if (show2FA && twoFactorCode.length !== 6) {
+      newErrors.twoFactorCode = '2FA code must be 6 digits';
+      isValid = false;
+    }
+
     setErrors(newErrors);
     return isValid;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      await login(email, password);
+    if (!validateForm()) return;
+
+    setIsLoading(true);
+    const result = await login(email, password, show2FA ? twoFactorCode : null);
+    setIsLoading(false);
+
+    if (result?.requires2FA && !show2FA) {
+      setShow2FA(true);
+      toast.info('2FA code is required');
     }
   };
 
@@ -106,13 +131,30 @@ export default function Login() {
                 )}
               </div>
 
-              <Button type="submit" className="w-full">
-                Sign In
-              </Button>
+              {show2FA && (
+                <div className="space-y-2">
+                  <Label htmlFor="twoFactorCode">2FA Code</Label>
+                  <div className="relative">
+                    <Shield className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="twoFactorCode"
+                      type="text"
+                      placeholder="123456"
+                      maxLength={6}
+                      value={twoFactorCode}
+                      onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, ''))}
+                      className="pl-10"
+                    />
+                  </div>
+                  {errors.twoFactorCode && (
+                    <p className="text-sm text-destructive">{errors.twoFactorCode}</p>
+                  )}
+                </div>
+              )}
 
-              <p className="text-xs text-center text-muted-foreground mt-4">
-                Demo: admin@coinoswap.com / admin123
-              </p>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? 'Signing in...' : 'Sign In'}
+              </Button>
             </form>
           </CardContent>
         </Card>

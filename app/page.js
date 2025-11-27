@@ -2,33 +2,37 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
+import { useAppSelector } from '@/redux/store/hook';
+import { getSession } from '@/redux/slices/authSlice';
+import { useAppDispatch } from '@/redux/store/hook';
 
 export default function Home() {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const dispatch = useAppDispatch();
+  const { isAuthenticated, sessionChecked, isLoading } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      router.push('/dashboard');
+    if (!sessionChecked) {
+      dispatch(getSession());
     }
-  }, [isAuthenticated, router]);
+  }, [dispatch, sessionChecked]);
 
+  useEffect(() => {
+    if (sessionChecked && !isLoading) {
+      if (isAuthenticated) {
+        router.push('/dashboard');
+      } else {
+        router.push('/login');
+      }
+    }
+  }, [isAuthenticated, sessionChecked, isLoading, router]);
+
+  // Show loading while checking session
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center max-w-2xl px-4">
-        <h1 className="text-5xl md:text-6xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-6">
-          CoinoSwap Admin
-        </h1>
-        <p className="text-xl text-muted-foreground mb-8">
-          Powerful cryptocurrency exchange management platform
-        </p>
-        <Button size="lg" onClick={() => router.push('/login')} className="gap-2">
-          Get Started
-          <ArrowRight className="h-5 w-5" />
-        </Button>
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+        <p className="mt-4 text-muted-foreground">Loading...</p>
       </div>
     </div>
   );

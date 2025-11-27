@@ -14,6 +14,7 @@ const NavLink = forwardRef(
       <Link
         href={to}
         ref={ref}
+        prefetch={true}
         className={cn(className, isActive && activeClassName)}
         {...props}
       />

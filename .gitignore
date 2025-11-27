@@ -14,7 +14,8 @@ node_modules
 dist
 dist-ssr
 *.local
-
+Coinoswap-NodeJS-Backend-v2
+.env
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

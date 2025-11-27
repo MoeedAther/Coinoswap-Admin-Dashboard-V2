@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,61 +9,188 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { useAppDispatch, useAppSelector } from "@/redux/store/hook";
+import { changePassword, enable2FA, verify2FA, disable2FA, clear2FASetup, getSession, logoutAdmin } from "@/redux/slices/authSlice";
+import { useAuth } from "@/contexts/AuthContext";
+import { Shield } from "lucide-react";
 
 export default function Setting() {
+  const dispatch = useAppDispatch();
+  const { logout } = useAuth();
+  const { admin, requires2FA, twoFA } = useAppSelector((state) => state.auth);
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [is2FAEnabled, setIs2FAEnabled] = useState(false);
-
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [show2FA, setShow2FA] = useState(false);
+  const is2FAEnabled = admin?.twoFactorEnabled || false;
   const [twoFACode, setTwoFACode] = useState("");
+  const [disablePassword, setDisablePassword] = useState("");
   const [disableCode, setDisableCode] = useState("");
 
+  // ----------------------- AUTO ENABLE 2FA ON MOUNT -----------------------
+  useEffect(() => {
+    dispatch(clear2FASetup());
+    
+    dispatch(getSession()).then((result) => {
+      if (getSession.fulfilled.match(result)) {
+        const current2FAStatus = result.payload.admin?.twoFactorEnabled || false;
+        
+        if (!current2FAStatus) {
+          setTimeout(() => {
+            handleEnable2FA();
+          }, 100);
+        }
+      }
+    });
+  }, []); 
+
   // ----------------------- CHANGE PASSWORD -----------------------
-  const handlePasswordChange = (e) => {
+  const handlePasswordChange = async (e) => {
     e.preventDefault();
 
-    if (!oldPassword || !newPassword || !confirmPassword) {
+    if (!oldPassword || !newPassword ) {
       toast.error("Please fill in all fields");
       return;
     }
-    if (newPassword !== confirmPassword) {
-      toast.error("New passwords do not match");
-      return;
-    }
+
     if (newPassword.length < 8) {
       toast.error("Password must be at least 8 characters");
       return;
     }
 
-    toast.success("Password changed successfully");
-    setOldPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
+    if (is2FAEnabled && !twoFactorCode) {
+      toast.error("2FA code is required");
+      setShow2FA(true);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const result = await dispatch(
+        changePassword({
+          currentPassword: oldPassword,
+          newPassword,
+          twoFactorCode: is2FAEnabled ? twoFactorCode : null,
+        })
+      );
+
+      if (changePassword.fulfilled.match(result)) {
+        toast.success("Password changed successfully. Please login again.");
+        setOldPassword("");
+        setNewPassword("");
+        setTwoFactorCode("");
+        setShow2FA(false);
+        
+        // Logout immediately after password change
+        setTimeout(() => {
+          logout();
+        }, 1000); // Small delay to show success message
+      } else {
+        const errorMessage =
+          result.payload?.message || "Password change failed";
+        if (result.payload?.requires2FA) {
+          setShow2FA(true);
+          toast.error(errorMessage);
+        } else {
+          toast.error(errorMessage);
+        }
+      }
+    } catch (error) {
+      toast.error("An error occurred while changing password");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // ----------------------- ENABLE 2FA -----------------------
-  const handleEnable2FA = () => {
+  const handleEnable2FA = async () => {
+    try {
+      const result = await dispatch(enable2FA());
+      
+      if (enable2FA.fulfilled.match(result)) {
+        toast.success("Scan the QR code with your authenticator app");
+      } else {
+        const errorMessage = result.payload?.message || "Failed to enable 2FA";
+        toast.error(errorMessage);
+      }
+    } catch (error) {
+      toast.error("An error occurred while enabling 2FA");
+    }
+  };
+
+  // ----------------------- VERIFY 2FA -----------------------
+  const handleVerify2FA = async () => {
     if (!twoFACode || twoFACode.length !== 6) {
       toast.error("Enter a valid 6-digit 2FA code");
       return;
     }
 
-    setIs2FAEnabled(true);
-    toast.success("2FA enabled successfully");
+    setIsLoading(true);
+    try {
+      const result = await dispatch(verify2FA({ twoFactorCode: twoFACode }));
+      
+      if (verify2FA.fulfilled.match(result)) {
+        toast.success("2FA enabled successfully");
+        setTwoFACode("");
+        dispatch(clear2FASetup());
+        // Refresh session to get updated 2FA status
+        dispatch(getSession());
+      } else {
+        const errorMessage = result.payload?.message || "Invalid 2FA code";
+        toast.error(errorMessage);
+      }
+    } catch (error) {
+      toast.error("An error occurred while verifying 2FA");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // ----------------------- DISABLE 2FA -----------------------
-  const handleDisable2FA = () => {
-    if (!disableCode || disableCode.length !== 6) {
-      toast.error("Enter the 6-digit code to disable 2FA");
+  const handleDisable2FA = async () => {
+    if (!disablePassword) {
+      toast.error("Password is required");
       return;
     }
 
-    setIs2FAEnabled(false);
-    setDisableCode("");
-    setTwoFACode("");
-    toast.success("2FA disabled successfully");
+    if (is2FAEnabled && !disableCode) {
+      toast.error("2FA code is required");
+      return;
+    }
+
+    if (disableCode && disableCode.length !== 6) {
+      toast.error("Enter a valid 6-digit 2FA code");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const result = await dispatch(disable2FA({
+        password: disablePassword,
+        twoFactorCode: is2FAEnabled ? disableCode : null,
+      }));
+      
+      if (disable2FA.fulfilled.match(result)) {
+        toast.success("2FA disabled successfully");
+        setDisablePassword("");
+        setDisableCode("");
+        // Refresh session to get updated 2FA status
+        dispatch(getSession()).then(() => {
+          // After disable, automatically call enable2FA to show QR code again
+          setTimeout(() => {
+            handleEnable2FA();
+          }, 500);
+        });
+      } else {
+        const errorMessage = result.payload?.message || "Failed to disable 2FA";
+        toast.error(errorMessage);
+      }
+    } catch (error) {
+      toast.error("An error occurred while disabling 2FA");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -72,8 +199,12 @@ export default function Setting() {
         <div className="space-y-4 sm:space-y-6">
           {/* Header */}
           <div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Setting</h2>
-            <p className="text-sm sm:text-base text-muted-foreground">Manage your security settings</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
+              Setting
+            </h2>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Manage your security settings
+            </p>
           </div>
 
           {/* TWO BOXES GRID */}
@@ -81,11 +212,16 @@ export default function Setting() {
             {/* ----------------- LEFT BOX: CHANGE PASSWORD ----------------- */}
             <Card className="border-border">
               <CardHeader>
-                <CardTitle className="text-lg sm:text-xl">Change Password</CardTitle>
+                <CardTitle className="text-lg sm:text-xl">
+                  Change Password
+                </CardTitle>
               </CardHeader>
 
               <CardContent>
-                <form onSubmit={handlePasswordChange} className="space-y-3 sm:space-y-4">
+                <form
+                  onSubmit={handlePasswordChange}
+                  className="space-y-3 sm:space-y-4"
+                >
                   {/* Old Password */}
                   <div className="space-y-2">
                     <Label>Old Password</Label>
@@ -109,7 +245,7 @@ export default function Setting() {
                   </div>
 
                   {/* Confirm */}
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <Label>Confirm New Password</Label>
                     <Input
                       type="password"
@@ -117,10 +253,29 @@ export default function Setting() {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Confirm your new password"
                     />
-                  </div>
+                  </div> */}
 
-                  <Button type="submit" className="w-full">
-                    Update Password
+                  {show2FA && is2FAEnabled && (
+                    <div className="space-y-2">
+                      <Label>2FA Code</Label>
+                      <div className="relative">
+                        <Shield className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type="text"
+                          placeholder="123456"
+                          maxLength={6}
+                          value={twoFactorCode}
+                          onChange={(e) =>
+                            setTwoFactorCode(e.target.value.replace(/\D/g, ""))
+                          }
+                          className="pl-10"
+                        />
+                      </div>
+                  </div>
+                  )}
+
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Updating..." : "Update Password"}
                   </Button>
                 </form>
               </CardContent>
@@ -129,63 +284,81 @@ export default function Setting() {
             {/* ----------------- RIGHT BOX: GOOGLE VERIFICATION ----------------- */}
             <Card className="border-border">
               <CardHeader>
-                <CardTitle className="text-lg sm:text-xl">Google Verification (2FA)</CardTitle>
+                <CardTitle className="text-lg sm:text-xl">
+                  Google Verification (2FA)
+                </CardTitle>
               </CardHeader>
 
               <CardContent className="space-y-4 sm:space-y-6">
                 {/* SWITCH */}
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm sm:text-base">Enable Two-Factor Authentication</Label>
+                  <Label className="text-sm sm:text-base">
+                    Enable Two-Factor Authentication
+                  </Label>
                   <Switch
                     checked={is2FAEnabled}
-                    onCheckedChange={(checked) => {
-                      if (!checked) {
-                        // User trying to disable; show disable box
-                        setIs2FAEnabled(true);
-                      }
-                    }}
+                    disabled={true}
                   />
                 </div>
 
                 {/* ----------- IF NOT ENABLED → SHOW ENABLE FLOW ----------- */}
                 {!is2FAEnabled && (
                   <>
-                    {/* QR Code */}
-                    <div className="flex justify-start">
-                      <img
-                        src="data:image/png;base64,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"
-                        alt="QR Code"
-                        className="w-40 h-40 rounded"
-                      />
-                    </div>
+                    {!twoFA.qrCode ? (
+                      <Button 
+                        className="w-full" 
+                        onClick={handleEnable2FA}
+                        disabled={twoFA.isEnabling}
+                      >
+                        {twoFA.isEnabling ? "Generating..." : "Enable 2FA"}
+                      </Button>
+                    ) : (
+                      <>
+                        {/* QR Code */}
+                        <div className="flex">
+                          <img
+                            src={twoFA.qrCode}
+                            alt="QR Code"
+                            className="w-40 h-40 rounded border border-border"
+                          />
+                        </div>
 
-                    {/* Secret Key */}
-                    <div className="space-y-2">
-                      <Label className="font-medium">Secret</Label>
-                      <Input
-                        value="MM5W6T2LLI5WYW23OBLS4JBBFAXUUTZZNQVFO6BTGIXCGNK6IZ2Q"
-                        readOnly
-                        className="bg-muted"
-                      />
-                    </div>
+                        {/* Secret Key */}
+                        <div className="space-y-2">
+                          <Label className="font-medium">Secret</Label>
+                          <Input
+                            value={twoFA.secret || ""}
+                            readOnly
+                            className="bg-muted"
+                          />
+                        </div>
 
-                    {/* Enter 6-Digit Code */}
-                    <div className="space-y-2">
-                      <Label className="font-medium">Enter 6-digit Code</Label>
-                      <Input
-                        maxLength={6}
-                        placeholder="123456"
-                        value={twoFACode}
-                        onChange={(e) =>
-                          setTwoFACode(e.target.value.replace(/\D/g, ""))
-                        }
-                        className="bg-muted"
-                      />
-                    </div>
+                        {/* Enter 6-Digit Code */}
+                        <div className="space-y-2">
+                          <Label className="font-medium">Enter 6-digit Code</Label>
+                          <div className="relative">
+                            <Shield className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              maxLength={6}
+                              placeholder="123456"
+                              value={twoFACode}
+                              onChange={(e) =>
+                                setTwoFACode(e.target.value.replace(/\D/g, ""))
+                              }
+                              className="pl-10"
+                            />
+                          </div>
+                        </div>
 
-                    <Button className="w-full" onClick={handleEnable2FA}>
-                      Enable 2FA
-                    </Button>
+                        <Button 
+                          className="w-full" 
+                          onClick={handleVerify2FA}
+                          disabled={isLoading || !twoFACode || twoFACode.length !== 6}
+                        >
+                          {isLoading ? "Verifying..." : "Verify & Enable 2FA"}
+                        </Button>
+                      </>
+                    )}
                   </>
                 )}
 
@@ -193,22 +366,38 @@ export default function Setting() {
                 {is2FAEnabled && (
                   <div className="space-y-3 sm:space-y-4">
                     <div className="space-y-2">
-                      <Label className="text-sm sm:text-base">Enter 2FA Code to Disable</Label>
+                      <Label className="text-sm sm:text-base">Password</Label>
                       <Input
-                        maxLength={6}
-                        placeholder="123456"
-                        value={disableCode}
-                        onChange={(e) =>
-                          setDisableCode(e.target.value.replace(/\D/g, ""))
-                        }
+                        type="password"
+                        placeholder="Enter your password"
+                        value={disablePassword}
+                        onChange={(e) => setDisablePassword(e.target.value)}
                       />
                     </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm sm:text-base">
+                        Enter 2FA Code to Disable
+                      </Label>
+                      <div className="relative">
+                        <Shield className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          maxLength={6}
+                          placeholder="123456"
+                          value={disableCode}
+                          onChange={(e) =>
+                            setDisableCode(e.target.value.replace(/\D/g, ""))
+                          }
+                          className="pl-10"
+                        />
+                      </div>
+                    </div>
 
-                    <Button
-                      className="w-full"
+                    <Button 
+                      className="w-full" 
                       onClick={handleDisable2FA}
+                      disabled={isLoading || !disablePassword || !disableCode || disableCode.length !== 6}
                     >
-                      Disable 2FA
+                      {isLoading ? "Disabling..." : "Disable 2FA"}
                     </Button>
                   </div>
                 )}

@@ -1,7 +1,9 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAppDispatch, useAppSelector } from '@/redux/store/hook';
+import { loginAdmin, logoutAdmin, getSession } from '@/redux/slices/authSlice';
 import { toast } from 'sonner';
 
 const AuthContext = createContext(undefined);
@@ -15,44 +17,57 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState(null);
+  const dispatch = useAppDispatch();
   const router = useRouter();
+  const { isAuthenticated, admin, isLoading, error, requires2FA } = useAppSelector((state) => state.auth);
 
+  // Check session on mount
   useEffect(() => {
-    const session = sessionStorage.getItem('admin_session');
-    if (session) {
-      const userData = JSON.parse(session);
-      setIsAuthenticated(true);
-      setUser(userData);
-    }
-  }, []);
+    dispatch(getSession());
+  }, [dispatch]);
 
-  const login = async (email, password) => {
-    // Demo credentials - replace with actual API call
-    if (email === 'admin@coinoswap.com' && password === 'admin123') {
-      const userData = { email };
-      sessionStorage.setItem('admin_session', JSON.stringify(userData));
-      setIsAuthenticated(true);
-      setUser(userData);
-      toast.success('Login successful!');
-      router.push('/dashboard');
-      return true;
+  const login = async (email, password, twoFactorCode = null) => {
+    try {
+      const result = await dispatch(loginAdmin({ email, password, twoFactorCode }));
+      
+      if (loginAdmin.fulfilled.match(result)) {
+        toast.success('Login successful!');
+        router.push('/dashboard');
+        return { success: true, requires2FA: false };
+      } else {
+        const errorMessage = result.payload?.message || 'Login failed';
+        if (result.payload?.requires2FA) {
+          return { success: false, requires2FA: true, message: errorMessage };
+        }
+        toast.error(errorMessage);
+        return { success: false, requires2FA: false, message: errorMessage };
+      }
+    } catch (err) {
+      toast.error('An error occurred during login');
+      return { success: false, requires2FA: false, message: 'An error occurred' };
     }
-    toast.error('Invalid credentials');
-    return false;
   };
 
-  const logout = () => {
-    sessionStorage.removeItem('admin_session');
-    setIsAuthenticated(false);
-    setUser(null);
-    toast.success('Logged out successfully');
-    router.push('/login');
+  const logout = async () => {
+    try {
+      await dispatch(logoutAdmin());
+      toast.success('Logged out successfully');
+      router.push('/login');
+    } catch (err) {
+      router.push('/login');
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout, user }}>
+    <AuthContext.Provider value={{ 
+      isAuthenticated, 
+      login, 
+      logout, 
+      user: admin,
+      isLoading,
+      error,
+      requires2FA
+    }}>
       {children}
     </AuthContext.Provider>
   );

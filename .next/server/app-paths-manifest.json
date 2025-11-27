@@ -1,0 +1,8 @@
+{
+  "/setting/page": "app/setting/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/buy-coin/page": "app/buy-coin/page.js",
+  "/transactions/page": "app/transactions/page.js",
+  "/networks/page": "app/networks/page.js"
+}
