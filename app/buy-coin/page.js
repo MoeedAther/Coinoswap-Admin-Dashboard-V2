@@ -7,25 +7,48 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, ShoppingCart, TrendingUp } from 'lucide-react';
+import { Search, ShoppingCart, TrendingUp, Filter } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const availableCoins = [
-  { id: 1, name: 'Bitcoin', symbol: 'BTC', price: '$43,250.00', change24h: '+2.5%', network: 'Bitcoin' },
-  { id: 2, name: 'Ethereum', symbol: 'ETH', price: '$2,280.50', change24h: '+1.8%', network: 'Ethereum' },
-  { id: 3, name: 'Solana', symbol: 'SOL', price: '$98.75', change24h: '+5.2%', network: 'Solana' },
-  { id: 4, name: 'Polygon', symbol: 'MATIC', price: '$0.85', change24h: '-0.5%', network: 'Polygon' },
-  { id: 5, name: 'Cardano', symbol: 'ADA', price: '$0.52', change24h: '+3.1%', network: 'Cardano' },
+  { id: 1, name: 'Bitcoin', symbol: 'BTC', price: '$43,250.00', change24h: '+2.5%', network: 'Bitcoin', isFiat: false, isStandard: true },
+  { id: 2, name: 'Ethereum', symbol: 'ETH', price: '$2,280.50', change24h: '+1.8%', network: 'Ethereum', isFiat: false, isStandard: true },
+  { id: 3, name: 'Solana', symbol: 'SOL', price: '$98.75', change24h: '+5.2%', network: 'Solana', isFiat: false, isStandard: false },
+  { id: 4, name: 'Polygon', symbol: 'MATIC', price: '$0.85', change24h: '-0.5%', network: 'Polygon', isFiat: false, isStandard: true },
+  { id: 5, name: 'Cardano', symbol: 'ADA', price: '$0.52', change24h: '+3.1%', network: 'Cardano', isFiat: false, isStandard: false },
+  { id: 6, name: 'US Dollar', symbol: 'USD', price: '$1.00', change24h: '0.0%', network: 'Fiat', isFiat: true, isStandard: true },
+  { id: 7, name: 'Euro', symbol: 'EUR', price: '$1.09', change24h: '+0.1%', network: 'Fiat', isFiat: true, isStandard: true },
 ];
 
 export default function BuyCoin() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [showFiat, setShowFiat] = useState(true);
+  const [showCrypto, setShowCrypto] = useState(true);
+  const [showStandard, setShowStandard] = useState(true);
+  const [showNonStandard, setShowNonStandard] = useState(true);
 
-  const filteredCoins = availableCoins.filter(
-    (coin) =>
+  const filteredCoins = availableCoins.filter((coin) => {
+    // Search filter
+    const matchesSearch =
       coin.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      coin.symbol.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      coin.symbol.toLowerCase().includes(searchQuery.toLowerCase());
+
+    // Fiat/Crypto filter
+    const matchesFiatFilter = (coin.isFiat && showFiat) || (!coin.isFiat && showCrypto);
+
+    // Standard filter
+    const matchesStandardFilter = (coin.isStandard && showStandard) || (!coin.isStandard && showNonStandard);
+
+    return matchesSearch && matchesFiatFilter && matchesStandardFilter;
+  });
 
   const handleBuy = (coin) => {
     toast.success(`Buy order initiated for ${coin.name}`);
@@ -44,14 +67,53 @@ export default function BuyCoin() {
             <CardHeader>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <CardTitle className="text-lg sm:text-xl">Available Coins</CardTitle>
-                <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search coins..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                  <div className="relative w-full sm:w-64">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search coins..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="gap-2">
+                        <Filter className="h-4 w-4" />
+                        Filters
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuLabel>Currency Type</DropdownMenuLabel>
+                      <DropdownMenuCheckboxItem
+                        checked={showFiat}
+                        onCheckedChange={setShowFiat}
+                      >
+                        Fiat Currencies
+                      </DropdownMenuCheckboxItem>
+                      <DropdownMenuCheckboxItem
+                        checked={showCrypto}
+                        onCheckedChange={setShowCrypto}
+                      >
+                        Cryptocurrencies
+                      </DropdownMenuCheckboxItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel>Standard Type</DropdownMenuLabel>
+                      <DropdownMenuCheckboxItem
+                        checked={showStandard}
+                        onCheckedChange={setShowStandard}
+                      >
+                        Standard
+                      </DropdownMenuCheckboxItem>
+                      <DropdownMenuCheckboxItem
+                        checked={showNonStandard}
+                        onCheckedChange={setShowNonStandard}
+                      >
+                        Non-Standard
+                      </DropdownMenuCheckboxItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             </CardHeader>

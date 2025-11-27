@@ -1,4 +1,4 @@
-// File: /Users/macbookpro/Desktop/new/Coinoswap-Admin-Dashboard-V2/app/layout.js
+// File: /Users/macbookpro/Desktop/work/Coinoswap/Project/Coinoswap-Admin-Dashboard-V2/app/layout.js
 import * as entry from '../../../app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
