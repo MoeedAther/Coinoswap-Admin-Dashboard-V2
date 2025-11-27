@@ -16,7 +16,7 @@ dist-ssr
 *.local
 Coinoswap-NodeJS-Backend-v2
 .env
-.next
+.next/
 
 # Editor directories and files
 .vscode/*
