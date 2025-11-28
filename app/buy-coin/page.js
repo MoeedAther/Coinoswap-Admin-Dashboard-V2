@@ -29,9 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
+import * as buyAPI from "@/api/buy";
 
 export default function BuyCoin() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -73,108 +71,81 @@ export default function BuyCoin() {
 
       setIsLoading(true);
       try {
-        const params = new URLSearchParams();
-        params.append("page", "1");
-        params.append("limit", "1000");
+        const baseParams = {
+          page: "1",
+          limit: "1000",
+        };
 
         const promises = [];
 
         if (showFiat && showStandard) {
           promises.push(
-            fetch(
-              `${API_BASE_URL}/buy/search-coins?isFiat=1&isStandard=1&${params.toString()}`
-            )
-              .then(async (res) => {
-                if (!res.ok) {
-                  const errorData = await res
-                    .json()
-                    .catch(() => ({ message: `HTTP ${res.status}` }));
-                  return {
-                    success: false,
-                    error: errorData.message || "Request failed",
-                    coins: [],
-                  };
-                }
-                return res.json();
-              })
+            buyAPI
+              .searchCoins({ ...baseParams, isFiat: "1", isStandard: "1" })
               .catch((error) => {
                 console.error("Error fetching fiat standard coins:", error);
-                return { success: false, error: error.message, coins: [] };
+                return {
+                  success: false,
+                  error:
+                    error.response?.data?.message ||
+                    error.message ||
+                    "Request failed",
+                  coins: [],
+                };
               })
           );
         }
         if (showFiat && showNonStandard) {
           promises.push(
-            fetch(
-              `${API_BASE_URL}/buy/search-coins?isFiat=1&isStandard=0&${params.toString()}`
-            )
-              .then(async (res) => {
-                if (!res.ok) {
-                  const errorData = await res
-                    .json()
-                    .catch(() => ({ message: `HTTP ${res.status}` }));
-                  return {
-                    success: false,
-                    error: errorData.message || "Request failed",
-                    coins: [],
-                  };
-                }
-                return res.json();
-              })
+            buyAPI
+              .searchCoins({ ...baseParams, isFiat: "1", isStandard: "0" })
               .catch((error) => {
                 console.error("Error fetching fiat non-standard coins:", error);
-                return { success: false, error: error.message, coins: [] };
+                return {
+                  success: false,
+                  error:
+                    error.response?.data?.message ||
+                    error.message ||
+                    "Request failed",
+                  coins: [],
+                };
               })
           );
         }
         if (showCrypto && showStandard) {
           promises.push(
-            fetch(
-              `${API_BASE_URL}/buy/search-coins?isFiat=0&isStandard=1&${params.toString()}`
-            )
-              .then(async (res) => {
-                if (!res.ok) {
-                  const errorData = await res
-                    .json()
-                    .catch(() => ({ message: `HTTP ${res.status}` }));
-                  return {
-                    success: false,
-                    error: errorData.message || "Request failed",
-                    coins: [],
-                  };
-                }
-                return res.json();
-              })
+            buyAPI
+              .searchCoins({ ...baseParams, isFiat: "0", isStandard: "1" })
               .catch((error) => {
                 console.error("Error fetching crypto standard coins:", error);
-                return { success: false, error: error.message, coins: [] };
+                return {
+                  success: false,
+                  error:
+                    error.response?.data?.message ||
+                    error.message ||
+                    "Request failed",
+                  coins: [],
+                };
               })
           );
         }
         if (showCrypto && showNonStandard) {
           promises.push(
-            fetch(
-              `${API_BASE_URL}/buy/search-coins?isFiat=0&isStandard=0&${params.toString()}`
-            )
-              .then(async (res) => {
-                if (!res.ok) {
-                  const errorData = await res
-                    .json()
-                    .catch(() => ({ message: `HTTP ${res.status}` }));
-                  return {
-                    success: false,
-                    error: errorData.message || "Request failed",
-                    coins: [],
-                  };
-                }
-                return res.json();
-              })
+            buyAPI
+              .searchCoins({ ...baseParams, isFiat: "0", isStandard: "0" })
               .catch((error) => {
                 console.error(
                   "Error fetching crypto non-standard coins:",
                   error
                 );
-                return { success: false, error: error.message, coins: [] };
+                return {
+                  success: false,
+                  error:
+                    error.response?.data?.message ||
+                    error.message ||
+                    "Request failed",
+                  coins: [],
+                };
               })
           );
         }
@@ -294,81 +265,78 @@ export default function BuyCoin() {
     }
 
     try {
-      const params = new URLSearchParams();
-      params.append("page", "1");
-      params.append("limit", "1000");
+      const baseParams = {
+        page: "1",
+        limit: "1000",
+      };
 
       const promises = [];
 
       if (showFiat && showStandard) {
         promises.push(
-          fetch(
-            `${API_BASE_URL}/buy/search-coins?isFiat=1&isStandard=1&${params.toString()}`
-          )
-            .then(async (res) => {
-              if (!res.ok) {
-                const errorData = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
-                return { success: false, error: errorData.message || 'Request failed', coins: [] };
-              }
-              return res.json();
-            })
+          buyAPI
+            .searchCoins({ ...baseParams, isFiat: "1", isStandard: "1" })
             .catch((error) => {
-              console.error('Error fetching fiat standard coins:', error);
-              return { success: false, error: error.message, coins: [] };
+              console.error("Error fetching fiat standard coins:", error);
+              return {
+                success: false,
+                error:
+                  error.response?.data?.message ||
+                  error.message ||
+                  "Request failed",
+                coins: [],
+              };
             })
         );
       }
       if (showFiat && showNonStandard) {
         promises.push(
-          fetch(
-            `${API_BASE_URL}/buy/search-coins?isFiat=1&isStandard=0&${params.toString()}`
-          )
-            .then(async (res) => {
-              if (!res.ok) {
-                const errorData = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
-                return { success: false, error: errorData.message || 'Request failed', coins: [] };
-              }
-              return res.json();
-            })
+          buyAPI
+            .searchCoins({ ...baseParams, isFiat: "1", isStandard: "0" })
             .catch((error) => {
-              console.error('Error fetching fiat non-standard coins:', error);
-              return { success: false, error: error.message, coins: [] };
+              console.error("Error fetching fiat non-standard coins:", error);
+              return {
+                success: false,
+                error:
+                  error.response?.data?.message ||
+                  error.message ||
+                  "Request failed",
+                coins: [],
+              };
             })
         );
       }
       if (showCrypto && showStandard) {
         promises.push(
-          fetch(
-            `${API_BASE_URL}/buy/search-coins?isFiat=0&isStandard=1&${params.toString()}`
-          )
-            .then(async (res) => {
-              if (!res.ok) {
-                const errorData = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
-                return { success: false, error: errorData.message || 'Request failed', coins: [] };
-              }
-              return res.json();
-            })
+          buyAPI
+            .searchCoins({ ...baseParams, isFiat: "0", isStandard: "1" })
             .catch((error) => {
-              console.error('Error fetching crypto standard coins:', error);
-              return { success: false, error: error.message, coins: [] };
+              console.error("Error fetching crypto standard coins:", error);
+              return {
+                success: false,
+                error:
+                  error.response?.data?.message ||
+                  error.message ||
+                  "Request failed",
+                coins: [],
+              };
             })
         );
       }
       if (showCrypto && showNonStandard) {
         promises.push(
-          fetch(
-            `${API_BASE_URL}/buy/search-coins?isFiat=0&isStandard=0&${params.toString()}`
-          )
-            .then(async (res) => {
-              if (!res.ok) {
-                const errorData = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
-                return { success: false, error: errorData.message || 'Request failed', coins: [] };
-              }
-              return res.json();
-            })
+          buyAPI
+            .searchCoins({ ...baseParams, isFiat: "0", isStandard: "0" })
             .catch((error) => {
-              console.error('Error fetching crypto non-standard coins:', error);
-              return { success: false, error: error.message, coins: [] };
+              console.error("Error fetching crypto non-standard coins:", error);
+              return {
+                success: false,
+                error:
+                  error.response?.data?.message ||
+                  error.message ||
+                  "Request failed",
+                coins: [],
+              };
             })
         );
       }
@@ -402,28 +370,17 @@ export default function BuyCoin() {
     }
 
     // Confirm deletion
-    if (!confirm(`Are you sure you want to delete ${coin.name} (${coin.ticker})?`)) {
+    if (
+      !confirm(`Are you sure you want to delete ${coin.name} (${coin.ticker})?`)
+    ) {
       return;
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/buy/create-standard-coin`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // Include cookies for session-based auth
-        body: JSON.stringify({
-          action: "delete",
-          standardCoinId: coin.id,
-        }),
+      const data = await buyAPI.createOrDeleteStandardCoin({
+        action: "delete",
+        standardCoinId: coin.id,
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to delete coin");
-      }
 
       if (data.success) {
         toast.success(data.message || "Coin deleted successfully");
@@ -434,14 +391,18 @@ export default function BuyCoin() {
       }
     } catch (error) {
       console.error("Error deleting coin:", error);
-      toast.error(error.message || "Failed to delete coin");
+      toast.error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to delete coin"
+      );
     }
   };
 
   return (
     <ProtectedRoute>
       <DashboardLayout>
-        <div className="space-y-6 p-2 md:p-6">
+        <div className="space-y-6 p-2 md:p-">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Buy Coin</h1>
             <p className="text-muted-foreground">
@@ -451,46 +412,57 @@ export default function BuyCoin() {
 
           <Card className="border-border">
             <CardHeader>
-              <CardTitle>Available Coins</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Search and Filters */}
-              <div className="flex flex-col justify-end sm:flex-row gap-4">
-                <div className="relative fl">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                {/* Left Side — Title */}
+                <CardTitle className="text-xl font-semibold">
+                  Available Coins
+                </CardTitle>
+
+                {/* Right Side — Search + Filters */}
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                  {/* Search Input */}
+                  <div className="relative w-full sm:w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                    type="text"
-                    placeholder="Search coins by name"
+                      type="text"
+                      placeholder="Search coins by name"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-10"
                     />
                   </div>
+
+                  {/* Filter Button */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="outline" className="gap-2">
+                      <Button
+                        variant="outline"
+                        className="gap-2 w-full sm:w-auto"
+                      >
                         <Filter className="h-4 w-4" />
                         Filters
                       </Button>
                     </DropdownMenuTrigger>
+
                     <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>Type</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
+                      <DropdownMenuLabel>Type</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
                       <DropdownMenuCheckboxItem
                         checked={showFiat}
                         onCheckedChange={setShowFiat}
                       >
-                      Fiat
+                        Fiat
                       </DropdownMenuCheckboxItem>
                       <DropdownMenuCheckboxItem
                         checked={showCrypto}
                         onCheckedChange={setShowCrypto}
                       >
-                      Crypto
+                        Crypto
                       </DropdownMenuCheckboxItem>
+
                       <DropdownMenuSeparator />
-                    <DropdownMenuLabel>Standard</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
+                      <DropdownMenuLabel>Standard</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
                       <DropdownMenuCheckboxItem
                         checked={showStandard}
                         onCheckedChange={setShowStandard}
@@ -506,7 +478,10 @@ export default function BuyCoin() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
+              </div>
+            </CardHeader>
 
+            <CardContent className="space-y-4">
               {/* Desktop Table */}
               <div className="hidden md:block overflow-x-auto">
                 <table className="w-full border-collapse">
@@ -563,18 +538,18 @@ export default function BuyCoin() {
                           : 0;
 
                         return (
-                      <tr
-                        key={coin.id}
-                        className="border-b border-border hover:bg-secondary/50 transition-smooth"
-                      >
-                        <td className="py-4 px-4">
-                          <div className="flex items-center gap-3">
-                            {/* Coin Image */}
+                          <tr
+                            key={coin.id}
+                            className="border-b border-border hover:bg-secondary/50 transition-smooth"
+                          >
+                            <td className="py-4 px-4">
+                              <div className="flex items-center gap-3">
+                                {/* Coin Image */}
                                 {coin.image ? (
-                            <img
+                                  <img
                                     src={coin.image}
-                              alt={coin.name}
-                              className="w-8 h-8 rounded-full object-cover"
+                                    alt={coin.name}
+                                    className="w-8 h-8 rounded-full object-cover"
                                     onError={(e) => {
                                       e.target.style.display = "none";
                                       const placeholder =
@@ -595,49 +570,49 @@ export default function BuyCoin() {
                                   </span>
                                 </div>
 
-                            {/* Name + Symbol */}
-                            <div>
-                              <p className="font-medium text-foreground">
-                                {coin.name}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
+                                {/* Name + Symbol */}
+                                <div>
+                                  <p className="font-medium text-foreground">
+                                    {coin.name}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
                                     {coin.ticker}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
 
-                        <td className="py-4 px-4">
+                            <td className="py-4 px-4">
                               <Badge variant="secondary">
                                 {coin.network || "N/A"}
                               </Badge>
                             </td>
                             <td className="py-4 px-4 text-foreground">
                               {coin.buyPartner || "N/A"}
-                        </td>
+                            </td>
                             <td className="py-4 px-4 text-foreground text-sm">
                               {partnerCount}
-                        </td>
-                        <td className="py-4 px-4">
+                            </td>
+                            <td className="py-4 px-4">
                               <Badge
                                 variant={coin.isFiat ? "default" : "outline"}
                               >
                                 {coin.isFiat ? "Fiat" : "Crypto"}
                               </Badge>
-                        </td>
-                        <td className="py-4 px-4 text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
-                                <Eye className="mr-2 h-4 w-4" />
-                                View
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
+                            </td>
+                            <td className="py-4 px-4 text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem>
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    View
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem>
                                     <Edit className="mr-2 h-4 w-4" />
                                     Edit
                                   </DropdownMenuItem>
@@ -651,9 +626,9 @@ export default function BuyCoin() {
                                     </DropdownMenuItem>
                                   )}
                                 </DropdownMenuContent>
-                          </DropdownMenu>
-                        </td>
-                      </tr>
+                              </DropdownMenu>
+                            </td>
+                          </tr>
                         );
                       })
                     )}
@@ -720,14 +695,14 @@ export default function BuyCoin() {
                               </div>
 
                               {/* Name + Ticker */}
-                        <div>
+                              <div>
                                 <p className="font-semibold text-foreground text-base truncate max-w-[110px]">
-                            {coin.name}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
+                                  {coin.name}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
                                   {coin.ticker}
-                          </p>
-                        </div>
+                                </p>
+                              </div>
                             </div>
 
                             {/* Right side — Network badge + menu */}
@@ -775,7 +750,7 @@ export default function BuyCoin() {
                               <span className="font-medium text-foreground">
                                 {coin.buyPartner || "N/A"}
                               </span>
-                      </div>
+                            </div>
 
                             <div className="flex flex-col">
                               <span className="text-muted-foreground">
@@ -783,8 +758,8 @@ export default function BuyCoin() {
                               </span>
                               <span className="font-medium">
                                 {partnerCount}
-                          </span>
-                        </div>
+                              </span>
+                            </div>
 
                             <div className="flex flex-col">
                               <span className="text-muted-foreground">
@@ -804,11 +779,11 @@ export default function BuyCoin() {
                               </span>
                               <span className="font-medium">
                                 {coin.isStandard ? "Yes" : "No"}
-                          </span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                              </span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
                     );
                   })
                 )}

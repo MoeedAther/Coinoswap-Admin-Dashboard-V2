@@ -1,35 +1,21 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-
-// API base URL - adjust this to match your backend
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+import * as authAPI from '@/api/auth';
 
 // Async thunks for API calls
 export const loginAdmin = createAsyncThunk(
   'auth/login',
   async ({ email, password, twoFactorCode }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Important for session cookies
-        body: JSON.stringify({
-          email,
-          password,
-          ...(twoFactorCode && { twoFactorCode }),
-        }),
+      const data = await authAPI.loginAdmin({
+        email,
+        password,
+        ...(twoFactorCode && { twoFactorCode }),
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        return rejectWithValue(data);
-      }
-
       return data;
     } catch (error) {
-      return rejectWithValue({ message: error.message || 'Login failed' });
+      return rejectWithValue(
+        error.response?.data || { message: error.message || 'Login failed' }
+      );
     }
   }
 );
@@ -38,20 +24,12 @@ export const logoutAdmin = createAsyncThunk(
   'auth/logout',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/logout`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        return rejectWithValue(data);
-      }
-
+      const data = await authAPI.logoutAdmin();
       return data;
     } catch (error) {
-      return rejectWithValue({ message: error.message || 'Logout failed' });
+      return rejectWithValue(
+        error.response?.data || { message: error.message || 'Logout failed' }
+      );
     }
   }
 );
@@ -60,20 +38,12 @@ export const getSession = createAsyncThunk(
   'auth/getSession',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/session`, {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        return rejectWithValue(data);
-      }
-
+      const data = await authAPI.getSession();
       return data;
     } catch (error) {
-      return rejectWithValue({ message: error.message || 'Session check failed' });
+      return rejectWithValue(
+        error.response?.data || { message: error.message || 'Session check failed' }
+      );
     }
   }
 );
@@ -82,28 +52,16 @@ export const changePassword = createAsyncThunk(
   'auth/changePassword',
   async ({ currentPassword, newPassword, twoFactorCode }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/change-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          currentPassword,
-          newPassword,
-          ...(twoFactorCode && { twoFactorCode }),
-        }),
+      const data = await authAPI.changePassword({
+        currentPassword,
+        newPassword,
+        ...(twoFactorCode && { twoFactorCode }),
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        return rejectWithValue(data);
-      }
-
       return data;
     } catch (error) {
-      return rejectWithValue({ message: error.message || 'Password change failed' });
+      return rejectWithValue(
+        error.response?.data || { message: error.message || 'Password change failed' }
+      );
     }
   }
 );
@@ -112,20 +70,12 @@ export const enable2FA = createAsyncThunk(
   'auth/enable2FA',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/2fa/enable`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        return rejectWithValue(data);
-      }
-
+      const data = await authAPI.enable2FA();
       return data;
     } catch (error) {
-      return rejectWithValue({ message: error.message || 'Failed to enable 2FA' });
+      return rejectWithValue(
+        error.response?.data || { message: error.message || 'Failed to enable 2FA' }
+      );
     }
   }
 );
@@ -134,26 +84,12 @@ export const verify2FA = createAsyncThunk(
   'auth/verify2FA',
   async ({ twoFactorCode }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/2fa/verify`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          twoFactorCode,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        return rejectWithValue(data);
-      }
-
+      const data = await authAPI.verify2FA({ twoFactorCode });
       return data;
     } catch (error) {
-      return rejectWithValue({ message: error.message || 'Failed to verify 2FA' });
+      return rejectWithValue(
+        error.response?.data || { message: error.message || 'Failed to verify 2FA' }
+      );
     }
   }
 );
@@ -162,27 +98,15 @@ export const disable2FA = createAsyncThunk(
   'auth/disable2FA',
   async ({ password, twoFactorCode }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/2fa/disable`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          password,
-          ...(twoFactorCode && { twoFactorCode }),
-        }),
+      const data = await authAPI.disable2FA({
+        password,
+        ...(twoFactorCode && { twoFactorCode }),
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        return rejectWithValue(data);
-      }
-
       return data;
     } catch (error) {
-      return rejectWithValue({ message: error.message || 'Failed to disable 2FA' });
+      return rejectWithValue(
+        error.response?.data || { message: error.message || 'Failed to disable 2FA' }
+      );
     }
   }
 );

@@ -227,6 +227,7 @@ export default function Setting() {
                     <Label>Old Password</Label>
                     <Input
                       type="password"
+                      autoComplete="current-password"
                       value={oldPassword}
                       onChange={(e) => setOldPassword(e.target.value)}
                       placeholder="Enter your old password"
@@ -238,6 +239,7 @@ export default function Setting() {
                     <Label>New Password</Label>
                     <Input
                       type="password"
+                      autoComplete="new-password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Enter your new password"
